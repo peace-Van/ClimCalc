@@ -216,11 +216,6 @@ class DLModel(nn.Module):
         x = torch.cat([x1_1, x1_2, x1_3, x2], dim=1)
         x = self.layer_norm(x)
 
-        # layer norm left branch (feature weights)
-        x_w = self.attention(x)
-        x_w = self.group_norm(x_w)
-        x_w = F.relu_(x_w)
-
         # layer norm right branch (features)
         x_f = self.conv1d(x)
         x_f_max = torch.max(x_f, dim=2).values
@@ -237,6 +232,11 @@ class DLModel(nn.Module):
             # veg = torch.argmax(x, dim=1)
             return pca_features[:, 0].numpy(force=True), pca_features[:, 1].numpy(force=True), prob.numpy(force=True)    #, veg.numpy(force=True)
         else:
+            # layer norm left branch (feature weights)
+            x_w = self.attention(x)
+            x_w = self.group_norm(x_w)
+            x_w = F.relu_(x_w)
+
             # multiply
             x = x_w * x_f
             x = self.linear1(x)
