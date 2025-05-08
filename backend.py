@@ -145,7 +145,9 @@ def climate_data_scraper(place_name: str) -> ClimateData:
                 row_data["tmn"] = [parse_value(td.get_text(strip=True), label) for td in row.find_all("td")]
             elif "mean daily maximum" in label:
                 row_data["tmx"] = [parse_value(td.get_text(strip=True), label) for td in row.find_all("td")]
-            elif "average precipitation mm" in label or "average precipitation inches" in label or "average rainfall mm" in label or "average rainfall inches" in label:
+            elif "average precipitation mm" in label or "average precipitation inches" in label:
+                row_data["pre"] = [parse_value(td.get_text(strip=True), label) for td in row.find_all("td")]
+            elif "average rainfall mm" in label or "average rainfall inches" in label:
                 row_data["pre"] = [parse_value(td.get_text(strip=True), label) for td in row.find_all("td")]
         if len(row_data) == 3:
             return ClimateData(row_data)
