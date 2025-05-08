@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     with st.form("place", enter_to_submit=False):
 
-        place_name = st.text_input("Place Name", value="My Hometown", help="For scraping, use the place name as it appears on Wikipedia.")
+        place_name = st.text_input("Place Name (e.g. New York City)", value="My Hometown", help="For scraping, use the place name as it appears on Wikipedia.")
 
         temp_dict = st.data_editor(
             st.session_state["data_dict"],
@@ -148,6 +148,8 @@ if __name__ == "__main__":
                                             help="Scrape Wikipedia for climate data using the place name. This will overwrite the manual input.")
         with cols[1]:
             submitted_manual = st.form_submit_button("Submit with manual input", type="secondary")
+        with cols[2]:
+            st.info("Click \"Submit with manual input\" to see how it works with the sample data.")
 
     if submitted_manual:
 
