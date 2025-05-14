@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     with st.form("place", enter_to_submit=False):
 
-        place_name = st.text_input("Place Name (e.g. New York City)", value="My Hometown", help="For scraping, use the place name as it appears on Wikipedia.")
+        place_name = st.text_input("Place Name (e.g. New York City. For scraping, use the place name as it appears on Wikipedia.)", value="My Hometown")
 
         temp_dict = st.data_editor(
             st.session_state["data_dict"] if st.session_state["unit"] else convert_metric_to_fahrenheit(st.session_state["data_dict"]),
@@ -187,7 +187,7 @@ if __name__ == "__main__":
                 st.toast("Place already exists. Please enter a different place name.")
 
         else:
-            st.toast("You can only add up to 3 places. Consider removing one using the Clear button on the chart tabs or the Clear All Locations button at the bottom.")
+            st.toast("You can only add up to 3 places. Consider removing one using the Clear button on the chart tabs or the Clear All Locations button.")
 
     if submitted_scraper:
         if len(st.session_state["places"]) < 3:
@@ -348,7 +348,7 @@ if __name__ == "__main__":
             with cols[2]:
                 st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 60 features to classify climate types, \
                         and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
-                        far away from the cluster center. They can be close in other 58 dimensions.")
+                        far away from its cluster center. They can be close in other 58 dimensions.")
         
         if places_to_remove:
             st.session_state["places"] = [st.session_state["places"][i] for i in range(len(st.session_state["places"])) if i not in places_to_remove]
