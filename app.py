@@ -5,6 +5,8 @@ from TorchModel import DLModel
 from backend import (
     ClimateData,
     fahrenheit_to_celcius,
+    celcius_to_fahrenheit,
+    mm_to_inch,
     inch_to_mm,
     MONTHS,
     create_climate_chart,
@@ -40,6 +42,13 @@ def convert_metric(data):
     return {
         "": ["Mean Daily Minimum Temperature", "Monthly Total Precipitation", "Mean Daily Maximum Temperature"],
         **{month: [fahrenheit_to_celcius(data[month][0]), inch_to_mm(data[month][1]), fahrenheit_to_celcius(data[month][2])] for month in MONTHS}
+    }
+
+
+def convert_metric_to_fahrenheit(data):
+    return {
+        "": ["Mean Daily Minimum Temperature", "Monthly Total Precipitation", "Mean Daily Maximum Temperature"],
+        **{month: [celcius_to_fahrenheit(data[month][0]), mm_to_inch(data[month][1]), celcius_to_fahrenheit(data[month][2])] for month in MONTHS}
     }
 
 
@@ -127,7 +136,7 @@ if __name__ == "__main__":
         place_name = st.text_input("Place Name (e.g. New York City)", value="My Hometown", help="For scraping, use the place name as it appears on Wikipedia.")
 
         temp_dict = st.data_editor(
-            st.session_state["data_dict"],
+            st.session_state["data_dict"] if st.session_state["unit"] else convert_metric_to_fahrenheit(st.session_state["data_dict"]),
             column_config={
                 "": st.column_config.TextColumn(
                     disabled=True,
