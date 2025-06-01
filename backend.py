@@ -420,6 +420,8 @@ def create_probability_chart(
 def create_scatter_plot(
     places: list[dict[str, any]],
     class_centers: np.ndarray,
+    show_0_4_lines: bool,
+    show_0_lines: bool,
 ) -> go.Figure:
     thermals = [place["thermal"] for place in places]
     thermals.extend(class_centers[:, 0])
@@ -450,10 +452,14 @@ def create_scatter_plot(
         hovertemplate="%{text}<br>Thermal Index: %{x:.2f}<br>Aridity Index: %{y:.2f}<extra></extra>"
     )
 
-    fig.add_shape(type="line", x0=-0.4, x1=-0.4, y0=-0.8, y1=0.8, line=dict(color="black", width=1, dash="dash"))
-    fig.add_shape(type="line", x0=0.4, x1=0.4, y0=-0.8, y1=0.8, line=dict(color="black", width=1, dash="dash"))
-    fig.add_shape(type="line", x0=-0.8, x1=0.8, y0=-0.4, y1=-0.4, line=dict(color="black", width=1, dash="dash"))
-    fig.add_shape(type="line", x0=-0.8, x1=0.8, y0=0.4, y1=0.4, line=dict(color="black", width=1, dash="dash"))
+    if show_0_4_lines:
+        fig.add_shape(type="line", x0=-0.4, x1=-0.4, y0=-0.8, y1=0.8, line=dict(color="black", width=2, dash="longdash"))
+        fig.add_shape(type="line", x0=0.4, x1=0.4, y0=-0.8, y1=0.8, line=dict(color="black", width=2, dash="longdash"))
+        fig.add_shape(type="line", x0=-0.8, x1=0.8, y0=-0.4, y1=-0.4, line=dict(color="black", width=2, dash="longdash"))
+        fig.add_shape(type="line", x0=-0.8, x1=0.8, y0=0.4, y1=0.4, line=dict(color="black", width=2, dash="longdash"))
+    if show_0_lines:
+        fig.add_shape(type="line", x0=0, x1=0, y0=-0.8, y1=0.8, line=dict(color="black", width=1, dash="dash"))
+        fig.add_shape(type="line", x0=-0.8, x1=0.8, y0=0, y1=0, line=dict(color="black", width=1, dash="dash"))
 
     fig.update_layout(
         xaxis=dict(

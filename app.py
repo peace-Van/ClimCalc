@@ -339,16 +339,20 @@ if __name__ == "__main__":
                     st.empty()
         
         elif st.session_state["chart_type"] == "Thermal-Aridity Scatter Plot":
+            with cols[2]:
+                st.checkbox("Show 0.4 lines", value=True, key="show_0_4_lines")
+                st.checkbox("Show zero lines", value=False, key="show_0_lines")
+                st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 60 features to classify climate types, \
+                        and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
+                        far away from its cluster center. They can be close in other 58 dimensions.")
             with cols[1]:
                 fig = create_scatter_plot(
                     places=st.session_state["places"],
                     class_centers=model.cluster.centers.numpy(),
+                    show_0_4_lines=st.session_state["show_0_4_lines"],
+                    show_0_lines=st.session_state["show_0_lines"],
                 )
                 st.plotly_chart(fig, use_container_width=True)
-            with cols[2]:
-                st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 60 features to classify climate types, \
-                        and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
-                        far away from its cluster center. They can be close in other 58 dimensions.")
         
         if places_to_remove:
             st.session_state["places"] = [st.session_state["places"][i] for i in range(len(st.session_state["places"])) if i not in places_to_remove]
