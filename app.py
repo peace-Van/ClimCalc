@@ -104,7 +104,7 @@ if __name__ == "__main__":
     if "places" not in st.session_state:
         st.session_state["places"] = []
 
-    model = get_network("best_model.pth")
+    model = get_network("model.pth")
 
     cols = st.columns(4)
     with cols[0]:
@@ -340,7 +340,7 @@ if __name__ == "__main__":
         
         elif st.session_state["chart_type"] == "Thermal-Aridity Scatter Plot":
             with cols[2]:
-                st.checkbox("Show 0.4 lines", value=True, key="show_0_4_lines")
+                st.checkbox("Show one lines", value=True, key="show_1_lines")
                 st.checkbox("Show zero lines", value=False, key="show_0_lines")
                 st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 60 features to classify climate types, \
                         and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
@@ -348,8 +348,8 @@ if __name__ == "__main__":
             with cols[1]:
                 fig = create_scatter_plot(
                     places=st.session_state["places"],
-                    class_centers=model.cluster.centers.numpy(),
-                    show_0_4_lines=st.session_state["show_0_4_lines"],
+                    class_centers=-model.cluster.centers.numpy(force=True),
+                    show_1_lines=st.session_state["show_1_lines"],
                     show_0_lines=st.session_state["show_0_lines"],
                 )
                 st.plotly_chart(fig, use_container_width=True)

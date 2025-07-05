@@ -48,8 +48,8 @@ class StructuredKMeans(nn.Module):
         # pca_centroid: (n_clusters, n_features)
         distances = torch.cdist(x, self.centers, p=2) ** 2  # (Batch, n_clusters) 
         # use softmax to calculate the probability
-        # use -distances * 10 to make the probability more concentrated
-        prob = torch.softmax(-distances * 10, dim=1)  # (Batch, n_clusters)
+        # # use -distances * 4 to make the probability more concentrated
+        prob = torch.softmax(-distances, dim=1)  # (Batch, n_clusters)
         return distances, prob
 
     def compute_loss(self, x):
