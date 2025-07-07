@@ -1,6 +1,6 @@
-from sched import scheduler
 import torch
 import torch.nn as nn
+from torch.nn.utils.parametrizations import orthogonal, weight_norm
 import torch.nn.functional as F
 from structured_kmeans import StructuredKMeans
 
@@ -143,16 +143,17 @@ class DLModel(nn.Module):
         self.attention = DualHeadSimpleAttention(in_features=230, embed_features=40, out_features=60, device=device)
         self.group_norm = nn.GroupNorm(num_groups=2, num_channels=120)
         # todo: relu
+        self.bn_score = nn.BatchNorm1d(num_features=120, affine=False)
 
         # layer norm right branch (features)
         self.conv1d = nn.Conv1d(in_channels=230, out_channels=60, kernel_size=1, bias=False)
         # todo: pool and concat
         self.batch_norm4 = BatchNormWithScale(normalized_shape=120, device=device)
         # todo: softsign
-        self.linear = nn.Linear(in_features=120, out_features=60, bias=False)
+        self.linear = orthogonal(nn.Linear(in_features=120, out_features=60, bias=False))
 
         # todo: multiply
-        self.linear1 = nn.Linear(in_features=120, out_features=240)
+        self.linear1 = weight_norm(nn.Linear(in_features=120, out_features=240), dim=1)
         # todo: relu
         # todo: transpose
         self.dropout = nn.Dropout1d(p=0.5)
@@ -211,7 +212,7 @@ class DLModel(nn.Module):
         x_f = F.softsign(x_f)
 
         if self.mode == 'inference':   
-            x_f = self.linear(x_f)
+            x_f = self.linear(x_f * self.bn_score.running_mean)
             _, prob = self.cluster(x_f)
             # veg = torch.argmax(x, dim=1)
             return -x_f[:, 0].numpy(force=True), -x_f[:, 1].numpy(force=True), prob.numpy(force=True)    #, veg.numpy(force=True)
@@ -220,6 +221,7 @@ class DLModel(nn.Module):
             x_w = self.attention(x)
             x_w = self.group_norm(x_w)
             x_w = F.relu_(x_w)
+            _ = self.bn_score(x_w)
 
             # multiply
             x = x_w * x_f
@@ -230,7 +232,7 @@ class DLModel(nn.Module):
             x = self.dropout(x)
             x = x.transpose(0, 1)
             x = self.linear2(x)
-            x_f = self.linear(x_f)
+            x_f = self.linear(x_f * x_w.mean(dim=0))
             cluster_loss, sample_loss, centroids_mean_distance, centroids_std_distance = self.cluster.compute_loss(x_f)
             veg_prob = F.softmax(x, dim=1)
             return x_f, cluster_loss, sample_loss, centroids_mean_distance, centroids_std_distance, veg_prob
@@ -245,7 +247,7 @@ class DLModel(nn.Module):
         nn.init.xavier_uniform_(self.attention.conv1d_q.weight, gain=1.0)
         nn.init.xavier_uniform_(self.attention.conv1d_k.weight, gain=1.0)
         nn.init.xavier_uniform_(self.attention.conv1d_v.weight, gain=1.0)
-        nn.init.xavier_uniform_(self.linear.weight, gain=1.0)
+        nn.init.orthogonal_(self.linear.weight, gain=1.0)
         nn.init.xavier_uniform_(self.linear1.weight, gain=1.0)
         nn.init.xavier_uniform_(self.linear2.weight, gain=1.0)
         nn.init.zeros_(self.linear1.bias)
@@ -276,7 +278,7 @@ if __name__ == "__main__":
     cluster_loss_weight = 0.1
     feature_loss_weight = 10.0
     k = 0.1
-    T = 0.22
+    T = 0.21
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
         torch.cuda.empty_cache()
@@ -319,7 +321,7 @@ if __name__ == "__main__":
     mseloss = nn.MSELoss()
     optimizer = optim.Adam([{'params': model.temp_params, 'lr': init_lr * 30},
                            {'params': model.precip_params, 'lr': init_lr * 200},
-                           {'params': model.cluster.centers, 'lr': init_lr / 10},
+                           {'params': model.cluster.centers, 'lr': init_lr / 5},
                            {'params': model.other_params}],
                            lr=init_lr,
                            weight_decay=weight_decay)
