@@ -15,6 +15,7 @@ from backend import (
     climate_data_scraper
 )
 from climate_classification import DLClassification
+torch.classes.__path__ = []
 
 
 EXAMPLE_DATA = {
