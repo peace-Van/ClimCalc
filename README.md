@@ -77,6 +77,7 @@ DEC_types = DLClassification.classify(class_probabilities)
 ├── requirements.txt      # Python dependencies
 ├── model.pth            # Pre-trained model weights
 └── README.md            # Project documentation
+└── LA.png               # DeepEcoClimate class probabilities for Los Angeles, California, US based on Wikipedia data
 ```
 
 ## Citation
