@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils.parametrizations import orthogonal, weight_norm
+from torch.nn.utils.parametrize import remove_parametrizations
 import torch.nn.functional as F
 from structured_kmeans import StructuredKMeans
 
@@ -96,9 +97,9 @@ class DualHeadSimpleAttention(nn.Module):
 
 
 class DLModel(nn.Module):
-    def __init__(self, device):
+    def __init__(self, device, mode):
         super(DLModel, self).__init__()
-        self.mode = 'inference'
+        self.mode = mode
         self.device = device
         self.act = MyActivationLayer(device)
         self.temp_params = [
@@ -150,10 +151,17 @@ class DLModel(nn.Module):
         # todo: pool and concat
         self.batch_norm4 = BatchNormWithScale(normalized_shape=120, device=device)
         # todo: softsign
-        self.linear = orthogonal(nn.Linear(in_features=120, out_features=60, bias=False))
+        if self.mode == 'train':
+            self.linear = orthogonal(nn.Linear(in_features=120, out_features=60, bias=False))
+        else:
+            self.linear = nn.Linear(in_features=120, out_features=60, bias=False)
 
         # todo: multiply
-        self.linear1 = weight_norm(nn.Linear(in_features=120, out_features=240), dim=1)
+        if self.mode == 'train':
+            self.linear1 = weight_norm(nn.Linear(in_features=120, out_features=240), dim=1)
+        else:
+            self.linear1 = nn.Linear(in_features=120, out_features=240)
+
         # todo: relu
         # todo: transpose
         self.dropout = nn.Dropout1d(p=0.5)
@@ -268,7 +276,7 @@ if __name__ == "__main__":
 
     torch.set_float32_matmul_precision('high')
 
-    # code for fine-tuning MATLAB-pretrained model
+    # code for migrating and fine-tuning MATLAB-pretrained model
     batch_size = 256
     init_lr = 1e-3
     weight_decay = 0.0
@@ -290,7 +298,7 @@ if __name__ == "__main__":
     # Climate data: CRU TS v4.06
     # https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.06/
     # Land Cover data: MCD12C1
-    # https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12C1
+    # https://www.earthdata.nasa.gov/data/catalog/lpcloud-mcd12c1-061
     # The features data is obtained by passing the inputs to the MATLAB pretrained model
     data = loadmat("data.mat")    
     inputs = data["inputs"]       # model inputs (batch, 3, 12) - climate normals
@@ -301,7 +309,7 @@ if __name__ == "__main__":
     print(inputs.shape, features.shape, init_centroids.shape, targets.shape)
     del data
 
-    model = DLModel(device)
+    model = DLModel(device, 'train')
     model.init_weights(init_centroids, k, T)
     model = model.to(device)
     model = torch.compile(model)
@@ -328,7 +336,7 @@ if __name__ == "__main__":
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=init_lr * 0.01)
     # scheduler = optim.lr_scheduler.StepLR(optimizer, lr_step, lr_gamma)
 
-    model.mode = 'train'
+    # model.mode = 'train'
     model.eval()
     with torch.no_grad():
         output_features, cluster_loss, sample_loss, centroids_mean_distance, centroids_std_distance, veg_prob = model(valid_inputs)
@@ -346,7 +354,7 @@ if __name__ == "__main__":
 
         model.train()
         if epoch == 15:
-            print("x")
+            print("-----------------------")
 
         for input, feature, target in tqdm(dl, desc="Training"):
             optimizer.zero_grad()
@@ -375,6 +383,8 @@ if __name__ == "__main__":
                 best_loss = loss.item()
                 best_model = model.state_dict()
 
+    best_model.linear = remove_parametrizations(best_model.linear, 'weight')
+    best_model.linear1 = remove_parametrizations(best_model.linear1, 'weight')
     torch.save(best_model, "best_model.pth")
         
     model.mode = 'inference'

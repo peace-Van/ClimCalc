@@ -55,10 +55,9 @@ def convert_metric_to_fahrenheit(data):
 
 @st.cache_resource
 def get_network(_weight_file: str) -> DLModel:
-    model = DLModel('cpu')
+    model = DLModel('cpu', 'inference')
     model = torch.compile(model)
     model.load_state_dict(torch.load(_weight_file, map_location=torch.device('cpu')))
-    model.mode = 'inference'
     model.eval()
     return model
 
