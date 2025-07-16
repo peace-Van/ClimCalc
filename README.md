@@ -1,5 +1,6 @@
 # ClimCalc - Climate Classification Calculator
 
+![DeepEcoClimateLogo](logo.png)
 ![DeepEcoClimate](LA.png)
 
 [ClimCalc](https://climcalc.streamlit.app) is an interactive web application for calculating climate classifications and analyzing climate data. It provides a user-friendly interface to determine climate types for specific locations or custom data using advanced deep learning model (DeepEcoClimate) and traditional climate classification systems (Köppen-Geiger and Trewartha).
@@ -44,10 +45,7 @@
    streamlit run app.py
    ```
 
-## DeepEcoClimate DL model
-
-* Model weights are specified in `model.pth`
-* Model usage:
+## DeepEcoClimate deep learning model usage
 
 ```python
 from TorchModel import DLModel
