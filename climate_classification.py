@@ -395,7 +395,7 @@ class DLClassification:
         "Gm": "#000099",  # 深蓝色，亚极地-极地过渡
         "Gw": "#CC99FF",  # 浅紫色，高山苔原
         "Gs": "#99FFFF",  # 浅青色，凉爽夏季极地
-        "Gx": "#FFFFFF"   # 白色，寒冷夏季极地
+        "Gx": "#C0C0C0"   # 灰色，寒冷夏季极地
     }
 
     # bulk operation
