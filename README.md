@@ -1,7 +1,7 @@
 # ClimCalc - Climate Classification Calculator
 
 ![DeepEcoClimateLogo](logo.png)
-![DeepEcoClimate](Melbourne.png)
+![DeepEcoClimate](Calgary.png)
 
 [ClimCalc](https://climcalc.streamlit.app) is an interactive web application for calculating climate classifications and analyzing climate data. It provides a user-friendly interface to determine climate types for specific locations or custom data using advanced deep learning model (DeepEcoClimate) and traditional climate classification systems (Köppen-Geiger and Trewartha).
 
@@ -75,7 +75,7 @@ DEC_types = DLClassification.classify(class_probabilities)
 ├── requirements.txt      # Python dependencies
 ├── model.pth             # Pre-trained model weights
 └── README.md             # Project documentation
-└── Melbourne.png         # DeepEcoClimate class probabilities for Melbourne, Australia based on Wikipedia data
+└── Calgary.png           # DeepEcoClimate class probabilities for Calgary, Canada based on Wikipedia data
 ```
 
 ## Citation

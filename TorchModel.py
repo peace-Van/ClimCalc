@@ -273,6 +273,7 @@ if __name__ == "__main__":
     np.set_printoptions(precision=4, suppress=True)
     from torch.utils.data import DataLoader, TensorDataset
     from tqdm import tqdm
+    from copy import deepcopy
 
     torch.set_float32_matmul_precision('high')
 
@@ -280,7 +281,7 @@ if __name__ == "__main__":
     batch_size = 256
     init_lr = 1e-3
     weight_decay = 0.0
-    epochs = 30
+    epochs = 40
     # lr_step = 10
     # lr_gamma = 1/3
     cluster_loss_weight = 0.1
@@ -293,13 +294,7 @@ if __name__ == "__main__":
     
     print("Using device:", device)
 
-    # Sorry I can't provide the dataset in the GitHub repo
-    # You can download it from the links
-    # Climate data: CRU TS v4.06
-    # https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.06/
-    # Land Cover data: MCD12C1
-    # https://www.earthdata.nasa.gov/data/catalog/lpcloud-mcd12c1-061
-    # The features data is obtained by passing the inputs to the MATLAB pretrained model
+    # Dataset link: https://data.mendeley.com/datasets/dnk6839b86/2
     data = loadmat("data.mat")    
     inputs = data["inputs"]       # model inputs (batch, 3, 12) - climate normals
     features = data["features"]   # MATLAB-pretrained climate features (batch, 60), teacher knowledge
@@ -348,12 +343,12 @@ if __name__ == "__main__":
         print(f'Sample Loss: {sample_loss.item()}, Centroids Mean Distance: {centroids_mean_distance.item()}, Centroids Std Distance: {centroids_std_distance.item()}')
 
     best_loss = loss.item()
-    best_model = model.state_dict()
+    best_model = deepcopy(model)
     for epoch in range(epochs):
         print(f"Epoch {epoch+1} / {epochs}")
 
         model.train()
-        if epoch == 15:
+        if epoch == 20:
             print("-----------------------")
 
         for input, feature, target in tqdm(dl, desc="Training"):
@@ -364,7 +359,7 @@ if __name__ == "__main__":
             loss = bce_loss + cluster_loss_weight * cluster_loss + feature_loss_weight * mse_loss
             loss.backward()
 
-            if epoch < 15:
+            if epoch < 20:
                 model.cluster.centers.grad = None
 
             optimizer.step()
@@ -381,17 +376,17 @@ if __name__ == "__main__":
             print(f'Sample Loss: {sample_loss.item()}, Centroids Mean Distance: {centroids_mean_distance.item()}, Centroids Std Distance: {centroids_std_distance.item()}')
             if loss.item() < best_loss:
                 best_loss = loss.item()
-                best_model = model.state_dict()
+                best_model = deepcopy(model)
 
     best_model.linear = remove_parametrizations(best_model.linear, 'weight')
     best_model.linear1 = remove_parametrizations(best_model.linear1, 'weight')
-    torch.save(best_model, "best_model.pth")
+    best_model.mode = 'inference'
+    best_model.eval()
+    torch.save(best_model.state_dict(), "best_model.pth")
         
-    model.mode = 'inference'
-    model.eval()
     test_data = loadmat("test_data.mat")
     test_data = test_data["test_input"]
     test_data = torch.from_numpy(test_data).float().pin_memory().to(device, non_blocking=True)
-    _, _, res = model(test_data)
-    centroids = model.cluster.centers.numpy(force=True)
+    _, _, res = best_model(test_data)
+    centroids = best_model.cluster.centers.numpy(force=True)
     savemat("result.mat", {"prob": res, "centroid": centroids})

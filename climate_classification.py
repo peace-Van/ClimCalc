@@ -345,9 +345,9 @@ class DLClassification:
         "Dw",
         "Ds",
         "Gs",
+        "Af",
         "Cf",
         "Am",
-        "Af",
         "Gx",
         "Bx",
         "Fs",
@@ -403,113 +403,4 @@ class DLClassification:
     def classify(cls, probabilities: np.ndarray) -> list[str]:
         cls_indices = np.argmax(probabilities, axis=1)
         return [cls.class_map[i] for i in cls_indices]
-
-
-# # usage
-# if __name__ == "__main__":
-#     from DLModel import DenseNetwork
-#     import h5py
-
-#     np.set_printoptions(suppress=True, precision=4)
-
-#     example_data = np.array(
-#         [
-#             [
-#                 [
-#                     2.7,
-#                     4.9,
-#                     8.4,
-#                     12.9,
-#                     17.2,
-#                     20.5,
-#                     22.1,
-#                     21.7,
-#                     18.9,
-#                     14.7,
-#                     9.6,
-#                     4.2,
-#                 ],  # low temperature in Celsius
-#                 [
-#                     8.1,
-#                     11.4,
-#                     24.1,
-#                     44.9,
-#                     78.0,
-#                     109.5,
-#                     231.8,
-#                     217.1,
-#                     120.8,
-#                     42.6,
-#                     14.8,
-#                     6.2,
-#                 ],  # precipitation in mm
-#                 [
-#                     9.3,
-#                     12.1,
-#                     16.8,
-#                     22.5,
-#                     26.3,
-#                     28.3,
-#                     30.0,
-#                     29.9,
-#                     25.7,
-#                     20.7,
-#                     16.0,
-#                     10.7,
-#                 ],  # high temperature in Celsius
-#             ]
-#         ], dtype=np.float32)
-#     # shape should be (batch_size, 3, 12)
-#     print("Input Shape:", example_data.shape)
-
-#     # data may also be loaded from the downloaded data file
-#     # with h5py.File('climate_data_land.h5', 'r') as f:
-#     #     indices = f.get('indices')[:]       # latitude and longitude of all the locations
-#     #     # example is given as a single location and single year, you can also do bulk processing
-#     #     lat, lon = 30.6, 105.8
-#     #     year = 2010
-#     #     # round to the nearest 0.5 degree
-#     #     lat = round(lat * 2) / 2
-#     #     lon = round(lon * 2) / 2
-#     #     idx = np.where((indices[:, 0] == lat) & (indices[:, 1] == lon))[0]
-#     #     tmp = f.get('tmp')[idx, year - 1901, :]
-#     #     pre = f.get('pre')[idx, year - 1901, :]
-#     #     pet = f.get('pet')[idx, year - 1901, :]
-#     #     example_data = np.array([tmp, pre, pet])
-#     #     example_data = example_data.transpose(1, 0, 2)
-
-#     with h5py.File("weights.h5", "r") as f:
-#         network = DenseNetwork(f)
-#         # pca_features, probability = network(example_data)
-#         thermal_index, aridity_index, probability, veg_index = network(example_data)
-#         advanced_dl_classifier = DLClassification(
-#             order=DETAILED_ORDER,
-#             class_map=DETAILED_MAP,
-#             color_map=DETAILED_COLOR_MAP,
-#         )
-#         # basic_dl_classifier = DLClassification(
-#         #     order=SIMPLE_ORDER,
-#         #     class_map=SIMPLE_MAP,
-#         #     color_map=SIMPLE_COLOR_MAP,
-#         # )
-
-#         # print("Cryohumidity:", pca_features[0][0])
-#         # print("Continentality:", pca_features[1][0])
-#         # print("Seasonality:", pca_features[2][0])
-#         print("Thermal Index:", thermal_index[0])
-#         print("Aridity Index:", aridity_index[0])
-#         print("Probability:", probability)
-
-#         print("DeepEcoClimate Type:", advanced_dl_classifier.classify(probability)[0])
-#         # print("Basic DECC Type:", basic_dl_classifier.classify(probability)[0])
-#         print("Land Cover Type:", VEG_MAP[veg_index[0]])
-
-#         # For the classic climate classification, bulk operation is not supported
-#         # example_data = example_data.squeeze()
-#         # print(
-#         #     "Köppen-Geiger Type:",
-#         #     KoppenClassification.classify(
-#         #         example_data, cd_threshold=-3, kh_mode="mean_temp"
-#         #     ),
-#         # )
-#         # print("Trewartha Type:", TrewarthaClassification.classify(example_data))
+    
