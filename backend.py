@@ -370,6 +370,16 @@ def create_probability_chart(
     probs = probabilities[top_3_indices]
     colors = [color_map[cls] for cls in classes]
 
+    # calculate remaining probability
+    remaining_prob = 1.0 - np.sum(probs)
+
+    # add "Others (Uncertainty)" if remaining probability >= 0.05
+    if remaining_prob >= 0.05:
+        classes.append("Others (Uncertainty)")
+        probs = np.append(probs, remaining_prob)
+        # use a distinct color that's different from climate type colors
+        colors.append("#808080")  # gray, different from climate type colors
+
     fig = go.Figure()
 
     # add probability bar chart
