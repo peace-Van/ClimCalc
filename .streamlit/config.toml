@@ -1,0 +1,11 @@
+[client]
+showErrorDetails = "type"
+
+[global]
+disableWidgetStateDuplicationWarning = true
+
+[theme]
+base = "light"
+
+[server]
+fileWatcherType = "poll"
