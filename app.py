@@ -15,6 +15,7 @@ from backend import (
     climate_data_scraper
 )
 from climate_classification import DLClassification
+import gc
 torch.classes.__path__ = []
 
 
@@ -172,6 +173,7 @@ if __name__ == "__main__":
                                                 "mean_temp" if st.session_state["koppen_kh_mode"] == "annual mean temp 18&deg;C" else "coldest_month")
                 trewartha = climate_data.get_trewartha()
                 thermal, aridity, prob = climate_data.get_dl(model)
+                gc.collect()
 
                 st.session_state["places"].append({
                     "place_name": place_name,
@@ -183,6 +185,8 @@ if __name__ == "__main__":
                     "probabilities": prob,
                     "dl": DLClassification.classify(prob)[0]
                 })
+                gc.collect()
+
             else:
                 st.toast("Place already exists. Please enter a different place name.")
 
@@ -196,11 +200,14 @@ if __name__ == "__main__":
                     try:
                         climate_data = climate_data_scraper(place_name)
                         st.session_state["data_dict"] = climate_data.to_display_dict()
+                        gc.collect()
 
                         koppen = climate_data.get_koppen(0 if st.session_state["koppen_cd_mode"] == "0&deg;C" else -3, 
                                                         "mean_temp" if st.session_state["koppen_kh_mode"] == "annual mean temp 18&deg;C" else "coldest_month")
                         trewartha = climate_data.get_trewartha()
                         thermal, aridity, prob = climate_data.get_dl(model)
+                        gc.collect()
+
                         st.session_state["places"].append({
                             "place_name": place_name,
                             "climate_data": climate_data,
@@ -211,9 +218,11 @@ if __name__ == "__main__":
                             "probabilities": prob,
                             "dl": DLClassification.classify(prob)[0]
                         })
-                        st.rerun()
+                        gc.collect()
+                        # st.rerun()
                     except Exception as e:
-                        st.toast(f"Error: {e}")          
+                        st.toast(f"Error: {e}")
+                        gc.collect()          
                         print(e)          
             else:
                 st.toast("Place already exists. Please enter a different place name.")
@@ -277,6 +286,7 @@ if __name__ == "__main__":
                 clear_all = st.button("Clear All Locations", type="primary")
                 if clear_all:
                     st.session_state["places"] = []
+                    gc.collect()
                     st.rerun()
 
         places_to_remove = set()
@@ -325,6 +335,7 @@ if __name__ == "__main__":
                                 )
                                 
                             st.plotly_chart(fig, use_container_width=True)
+                            gc.collect()
 
                             with col3:
                                 delete = st.button(
@@ -353,9 +364,11 @@ if __name__ == "__main__":
                     show_0_lines=st.session_state["show_0_lines"],
                 )
                 st.plotly_chart(fig, use_container_width=True)
+                gc.collect()
         
         if places_to_remove:
             st.session_state["places"] = [st.session_state["places"][i] for i in range(len(st.session_state["places"])) if i not in places_to_remove]
+            gc.collect()
             st.rerun()
 
         # if len(st.session_state["places"]) > 0:
