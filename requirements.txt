@@ -145,7 +145,7 @@ tenacity==9.1.2
     # via streamlit
 toml==0.10.2
     # via streamlit
-torch==2.7.0
+torch==2.7.0+cpu
     # via -r requirements.in
 tornado==6.4.2
     # via streamlit
