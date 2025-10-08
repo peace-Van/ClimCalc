@@ -379,3 +379,4 @@ if __name__ == "__main__":
 
         st.divider()
         st.page_link("https://climviz.streamlit.app/", label="ClimViz - Global Map over years", icon=":material/globe:")
+        st.page_link("https://www.youtube.com/watch?v=bF0Mck-yqhw", icon=":material/play_circle:", label="YouTube", help="Watch the introduction video")
