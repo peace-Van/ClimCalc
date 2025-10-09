@@ -51,7 +51,7 @@ def wake_up_streamlit_app():
         driver.implicitly_wait(10)
 
         print("🌐 Visit Streamlit app...")
-        driver.get("https://climviz.streamlit.app/")
+        driver.get("https://climcalc.streamlit.app/")
 
         wait = WebDriverWait(driver, 30)
         try:
