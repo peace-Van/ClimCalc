@@ -1,0 +1,43 @@
+name: Keep Streamlit App Alive
+
+on:
+  schedule:
+    - cron: '0 */8 * * *'  # run every 8 hours
+  workflow_dispatch:  # allow manual trigger
+
+jobs:
+  keep_alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements_wakeup.txt
+
+      - name: Wake up Streamlit app
+        run: |
+          echo "🤖 Starting intelligent wake-up process..."
+          python wake_up_app.py
+
+      - name: Upload screenshot (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-screenshot
+          path: app_status.png
+          retention-days: 1
+
+      - name: Upload error screenshot (if any)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: error-screenshot
+          path: error_screenshot.png
+          retention-days: 1
