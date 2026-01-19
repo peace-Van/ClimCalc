@@ -79,7 +79,7 @@ class DualHeadSimpleAttention(nn.Module):
         q = self.conv1d_q(x)  # (batch_size, 2 * embed_features, seq_len)
         k = self.conv1d_k(x)  # (batch_size, 2 * embed_features, seq_len)
         v = self.conv1d_v(x)  # (batch_size, 2 * out_features, seq_len)
-        
+            
         q = q.reshape(batch_size, seq_len, 2, -1).transpose(1, 2)  # (batch_size, 2, seq_len, embed_features)
         k = k.reshape(batch_size, seq_len, 2, -1).transpose(1, 2)  # (batch_size, 2, seq_len, embed_features)
         v = v.reshape(batch_size, seq_len, 2, -1).transpose(1, 2)  # (batch_size, 2, seq_len, out_features)
@@ -152,9 +152,10 @@ class DLModel(nn.Module):
         self.batch_norm4 = BatchNormWithScale(normalized_shape=120, device=device)
         # todo: softsign
         if self.mode == 'train':
-            self.linear = orthogonal(nn.Linear(in_features=120, out_features=60, bias=False))
+            self.linear = orthogonal(nn.Linear(in_features=120, out_features=59, bias=True))
+
         else:
-            self.linear = nn.Linear(in_features=120, out_features=60, bias=False)
+            self.linear = nn.Linear(in_features=120, out_features=59, bias=True)
 
         # todo: multiply
         if self.mode == 'train':
@@ -169,7 +170,7 @@ class DLModel(nn.Module):
         self.linear2 = nn.Linear(in_features=240, out_features=14)
         # todo: softmax
 
-        self.cluster = StructuredKMeans(None, 26, 60, device=device)
+        self.cluster = StructuredKMeans(None, 27, 59, device=device)
         self.cluster_params = [
             self.cluster.centers,
         ]
@@ -258,6 +259,7 @@ class DLModel(nn.Module):
         nn.init.orthogonal_(self.linear.weight, gain=1.0)
         nn.init.xavier_uniform_(self.linear1.weight, gain=1.0)
         nn.init.xavier_uniform_(self.linear2.weight, gain=1.0)
+        nn.init.zeros_(self.linear.bias)
         nn.init.zeros_(self.linear1.bias)
         nn.init.zeros_(self.linear2.bias)
 
@@ -268,7 +270,7 @@ class DLModel(nn.Module):
 
 if __name__ == "__main__":
     import torch.optim as optim
-    from scipy.io import loadmat, savemat
+    import xarray as xr
     import numpy as np
     np.set_printoptions(precision=4, suppress=True)
     from torch.utils.data import DataLoader, TensorDataset
@@ -287,7 +289,7 @@ if __name__ == "__main__":
     cluster_loss_weight = 0.1
     feature_loss_weight = 10.0
     k = 0.1
-    T = 0.21
+    T = 0.2
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if device == "cuda":
         torch.cuda.empty_cache()
@@ -295,14 +297,15 @@ if __name__ == "__main__":
     print("Using device:", device)
 
     # Dataset link: https://data.mendeley.com/datasets/dnk6839b86/2
-    data = loadmat("data.mat")    
-    inputs = data["inputs"]       # model inputs (batch, 3, 12) - climate normals
-    features = data["features"]   # MATLAB-pretrained climate features (batch, 60), teacher knowledge
-    init_centroids = data["new_centroid"]  # MATLAB-pretrained cluster centroids (26, 60)
-    targets = data["targets"]    # model targets (batch, 14) - land cover classes proportions
+    train_ds = xr.open_dataset("train_data.nc", engine="h5netcdf")
+    inputs = train_ds["inputs"].values       # model inputs (batch, 3, 12) - climate normals
+    features = train_ds["features"].values   # MATLAB-pretrained climate features (batch, 59), teacher knowledge
+    weights = train_ds["weights"].values.reshape(-1, 1)     # sample weights (batch, 1)
+    init_centroids = train_ds["init_centroid"].values    # MATLAB-pretrained cluster centroids (27, 59)
+    targets = train_ds["targets"].values    # model targets (batch, 14) - land cover classes proportions
 
-    print(inputs.shape, features.shape, init_centroids.shape, targets.shape)
-    del data
+    print(inputs.shape, features.shape, weights.shape, init_centroids.shape, targets.shape)
+    train_ds.close()
 
     model = DLModel(device, 'train')
     model.init_weights(init_centroids, k, T)
@@ -312,15 +315,23 @@ if __name__ == "__main__":
     inputs = torch.from_numpy(inputs).float().pin_memory().to(device, non_blocking=True)
     features = torch.from_numpy(features).float().pin_memory().to(device, non_blocking=True)
     targets = torch.from_numpy(targets).float().pin_memory().to(device, non_blocking=True)
-    # Last year in the dataset
-    valid_inputs = inputs[-67213:, :, :]
-    valid_features = features[-67213:, :]
-    valid_targets = targets[-67213:, :]
+    weights = torch.from_numpy(weights).float().pin_memory().to(device, non_blocking=True)    
 
-    ds = TensorDataset(inputs, features, targets)
+    valid_ds = xr.open_dataset("valid_data.nc", engine="h5netcdf")
+    valid_inputs = valid_ds["inputs"].values
+    valid_features = valid_ds["features"].values
+    valid_targets = valid_ds["targets"].values
+    valid_weights = valid_ds["weights"].values.reshape(-1, 1)
+    valid_ds.close()
+
+    valid_inputs = torch.from_numpy(valid_inputs).float().pin_memory().to(device, non_blocking=True)
+    valid_features = torch.from_numpy(valid_features).float().pin_memory().to(device, non_blocking=True)
+    valid_targets = torch.from_numpy(valid_targets).float().pin_memory().to(device, non_blocking=True)
+    valid_weights = torch.from_numpy(valid_weights).float().pin_memory().to(device, non_blocking=True)
+
+    ds = TensorDataset(inputs, features, targets, weights)
     dl = DataLoader(ds, batch_size=batch_size, shuffle=True, drop_last=True)
     
-    bceloss = nn.BCELoss()
     mseloss = nn.MSELoss()
     optimizer = optim.Adam([{'params': model.temp_params, 'lr': init_lr * 30},
                            {'params': model.precip_params, 'lr': init_lr * 200},
@@ -335,7 +346,8 @@ if __name__ == "__main__":
     model.eval()
     with torch.no_grad():
         output_features, cluster_loss, sample_loss, centroids_mean_distance, centroids_std_distance, veg_prob = model(valid_inputs)
-        bce_loss = bceloss(veg_prob, valid_targets) - bceloss(valid_targets, valid_targets)
+        bceloss = nn.BCELoss(weight=valid_weights)
+        bce_loss = (bceloss(veg_prob, valid_targets) - bceloss(valid_targets, valid_targets)) / valid_weights.mean()
         mse_loss = mseloss(output_features, valid_features)
         loss = bce_loss + cluster_loss_weight * cluster_loss + feature_loss_weight * mse_loss
         print("Before Training")
@@ -345,16 +357,17 @@ if __name__ == "__main__":
     best_loss = loss.item()
     best_model = deepcopy(model)
     for epoch in range(epochs):
+        if epoch == 20:
+            print("-----------------------")
         print(f"Epoch {epoch+1} / {epochs}")
 
         model.train()
-        if epoch == 20:
-            print("-----------------------")
 
-        for input, feature, target in tqdm(dl, desc="Training"):
+        for input, feature, target, weight in tqdm(dl, desc="Training"):
             optimizer.zero_grad()
             output_features, cluster_loss, _, _, _, veg_prob = model(input)
-            bce_loss = bceloss(veg_prob, target) - bceloss(target, target)
+            bceloss = nn.BCELoss(weight=weight)
+            bce_loss = (bceloss(veg_prob, target) - bceloss(target, target)) / weight.mean()
             mse_loss = mseloss(output_features, feature)
             loss = bce_loss + cluster_loss_weight * cluster_loss + feature_loss_weight * mse_loss
             loss.backward()
@@ -369,7 +382,8 @@ if __name__ == "__main__":
         model.eval()
         with torch.no_grad():
             output_features, cluster_loss, sample_loss, centroids_mean_distance, centroids_std_distance, veg_prob = model(valid_inputs)
-            bce_loss = bceloss(veg_prob, valid_targets) - bceloss(valid_targets, valid_targets)
+            bceloss = nn.BCELoss(weight=valid_weights)
+            bce_loss = (bceloss(veg_prob, valid_targets) - bceloss(valid_targets, valid_targets)) / valid_weights.mean()
             mse_loss = mseloss(output_features, valid_features)
             loss = bce_loss + cluster_loss_weight * cluster_loss + feature_loss_weight * mse_loss
             print(f'Total Loss: {loss.item()}, Veg Loss: {bce_loss.item()}, Feature Loss: {mse_loss.item()}')
@@ -382,11 +396,12 @@ if __name__ == "__main__":
     best_model.linear1 = remove_parametrizations(best_model.linear1, 'weight')
     best_model.mode = 'inference'
     best_model.eval()
-    torch.save(best_model.state_dict(), "best_model.pth")
-        
-    test_data = loadmat("test_data.mat")
-    test_data = test_data["test_input"]
-    test_data = torch.from_numpy(test_data).float().pin_memory().to(device, non_blocking=True)
-    _, _, res = best_model(test_data)
-    centroids = best_model.cluster.centers.numpy(force=True)
-    savemat("result.mat", {"prob": res, "centroid": centroids})
+    torch.save(best_model.state_dict(), "model.pth")
+
+    # from scipy.io import loadmat, savemat    
+    # test_data = loadmat("test_data.mat")
+    # test_data = test_data["test_input"]
+    # test_data = torch.from_numpy(test_data).float().pin_memory().to(device, non_blocking=True)
+    # _, _, res = best_model(test_data)
+    # centroids = best_model.cluster.centers.numpy(force=True)
+    # savemat("result.mat", {"prob": res, "centroid": centroids})

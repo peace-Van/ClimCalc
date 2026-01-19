@@ -334,7 +334,7 @@ if __name__ == "__main__":
                                     auto_scale=st.session_state[f"auto_scale_{place_idx}_climate"],
                                 )
                                 
-                            st.plotly_chart(fig, use_container_width=True)
+                            st.plotly_chart(fig, width='stretch')
                             gc.collect()
 
                             with col3:
@@ -353,9 +353,9 @@ if __name__ == "__main__":
             with cols[2]:
                 st.checkbox("Show one lines", value=True, key="show_1_lines")
                 st.checkbox("Show zero lines", value=False, key="show_0_lines")
-                st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 60 features to classify climate types, \
+                st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 59 features to classify climate types, \
                         and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
-                        far away from its cluster center. They can be close in other 58 dimensions.")
+                        far away from its cluster center. They can be close in other 57 dimensions.")
             with cols[1]:
                 fig = create_scatter_plot(
                     places=st.session_state["places"],
@@ -363,7 +363,7 @@ if __name__ == "__main__":
                     show_1_lines=st.session_state["show_1_lines"],
                     show_0_lines=st.session_state["show_0_lines"],
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
                 gc.collect()
         
         if places_to_remove:
