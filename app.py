@@ -351,8 +351,8 @@ if __name__ == "__main__":
         
         elif st.session_state["chart_type"] == "Thermal-Aridity Scatter Plot":
             with cols[2]:
-                st.checkbox("Show one lines", value=True, key="show_1_lines")
-                st.checkbox("Show zero lines", value=False, key="show_0_lines")
+                st.checkbox("Show vertical lines", value=True, key="show_vertical_lines")
+                st.checkbox("Show horizontal lines", value=False, key="show_horizontal_lines")
                 st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 59 features to classify climate types, \
                         and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
                         far away from its cluster center. They can be close in other 57 dimensions.")
@@ -360,8 +360,8 @@ if __name__ == "__main__":
                 fig = create_scatter_plot(
                     places=st.session_state["places"],
                     class_centers=-model.cluster.centers.numpy(force=True),
-                    show_1_lines=st.session_state["show_1_lines"],
-                    show_0_lines=st.session_state["show_0_lines"],
+                    show_vertical_lines=st.session_state["show_vertical_lines"],
+                    show_horizontal_lines=st.session_state["show_horizontal_lines"],
                 )
                 st.plotly_chart(fig, width='stretch')
                 gc.collect()
