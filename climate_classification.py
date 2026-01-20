@@ -322,7 +322,7 @@ class DLClassification:
         "Ff",
         "Fm",
         "Fw",
-        "Gs",
+        "Fs",
         "Gm",
         "Gs",
         "Gx",
