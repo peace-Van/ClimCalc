@@ -321,9 +321,9 @@ class DLClassification:
         "Ex",
         "Ff",
         "Fm",
-        "Fs",
+        "Fw",
+        "Gs",
         "Gm",
-        "Gw",
         "Gs",
         "Gx",
     ]
@@ -332,7 +332,7 @@ class DLClassification:
         "Bw",
         "Bm",
         "Es",
-        "Fs",
+        "Fw",
         "Em",
         "Ew",
         "Fm",
@@ -343,9 +343,9 @@ class DLClassification:
         "Df",
         "Ds",
         "Bx",
-        "Gm",
+        "Fs",
         "Bs",
-        "Gw",
+        "Gm",
         "Aw",
         "Cm",
         "Dm",
@@ -392,11 +392,11 @@ class DLClassification:
         # F组 - 亚极地和亚寒带气候
         "Ff": "#3366CC",  # 亮蓝色，亚极地海洋性
         "Fm": "#006699",  # 深蓝紫色，北方针叶林
-        "Fs": "#00CCCC",  # 深青色，极寒大陆性
-        
+        "Fw": "#00CCCC",  # 深青色，极寒大陆性
+        "Fs": "#000099",  # 深蓝色，亚极地-极地过渡
+
         # G组 - 极地气候
-        "Gm": "#000099",  # 深蓝色，亚极地-极地过渡
-        "Gw": "#CC99FF",  # 浅紫色，高寒
+        "Gm": "#CC99FF",  # 浅紫色，高寒
         "Gs": "#99FFFF",  # 浅青色，极地苔原
         "Gx": "#707070"   # 灰色，冰原
     }
