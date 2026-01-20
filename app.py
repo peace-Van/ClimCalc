@@ -351,7 +351,7 @@ if __name__ == "__main__":
         
         elif st.session_state["chart_type"] == "Thermal-Aridity Scatter Plot":
             with cols[2]:
-                st.checkbox("Show vertical lines", value=True, key="show_vertical_lines")
+                st.checkbox("Show vertical lines", value=False, key="show_vertical_lines")
                 st.checkbox("Show horizontal lines", value=False, key="show_horizontal_lines")
                 st.info("Use full screen mode of the chart for better visibility. \n\n DeepEcoClimate uses 59 features to classify climate types, \
                         and the scatter plot only shows the first 2 principal components. So sometimes you may find a point appears \
