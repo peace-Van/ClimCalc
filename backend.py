@@ -480,6 +480,8 @@ def create_scatter_plot(
             title="Thermal Index",
             title_font=dict(size=16, color="black"),
             tickfont=dict(size=12, color="black"),
+            tickmode="array",
+            tickvals=[-2, -1.2, -0.4, 0.4, 1.2, 2],
         ),
         yaxis=dict(
             range=[-2, 2],
@@ -488,6 +490,8 @@ def create_scatter_plot(
             title="Aridity Index",
             title_font=dict(size=16, color="black"),
             tickfont=dict(size=12, color="black"),
+            tickmode="array",
+            tickvals=[-2, -1, 0, 1, 2],
         ),
         plot_bgcolor="white",
         margin=dict(t=0, l=0, r=0, b=0),
