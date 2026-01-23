@@ -296,7 +296,7 @@ if __name__ == "__main__":
     
     print("Using device:", device)
 
-    # Dataset link: https://data.mendeley.com/datasets/dnk6839b86/2
+    # Dataset link: https://data.mendeley.com/datasets/dnk6839b86/3
     train_ds = xr.open_dataset("train_data.nc", engine="h5netcdf")
     inputs = train_ds["inputs"].values       # model inputs (batch, 3, 12) - climate normals
     features = train_ds["features"].values   # MATLAB-pretrained climate features (batch, 59), teacher knowledge
